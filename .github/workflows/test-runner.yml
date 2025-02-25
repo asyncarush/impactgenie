@@ -1,0 +1,54 @@
+name: Test Runner Environment
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-environment:
+    runs-on: macos-latest  # This will run on macOS
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: System Information
+      run: |
+        echo "Operating System Info:"
+        sw_vers
+        echo "-------------------"
+        echo "macOS Version:"
+        system_profiler SPSoftwareDataType
+        echo "-------------------"
+        echo "Node Version:"
+        node --version
+        echo "-------------------"
+        echo "NPM Version:"
+        npm --version
+        echo "-------------------"
+        echo "Environment Variables:"
+        env | grep -i "path\|node\|npm"
+
+    - name: Test Development Environment
+      run: |
+        echo "Testing development environment setup..."
+        # Check for required development tools
+        which node
+        which npm
+        which git
+        # Check system architecture
+        uname -a
+        # Check available disk space
+        df -h
+        # Check memory info
+        vm_stat
+
+    - name: Node.js Setup Check
+      run: |
+        echo "Node.js environment details:"
+        node -e "console.log('Node.js Runtime:', process.version)"
+        node -e "console.log('Architecture:', process.arch)"
+        node -e "console.log('Platform:', process.platform)"
+        node -e "console.log('OS Release:', require('os').release())"
