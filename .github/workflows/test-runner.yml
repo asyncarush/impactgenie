@@ -9,7 +9,7 @@ on:
 
 jobs:
   test-environment:
-    runs-on: macos-latest  # This will run on macOS
+    runs-on: ubuntu-latest  # Changed to Ubuntu
 
     steps:
     - uses: actions/checkout@v4
@@ -17,33 +17,59 @@ jobs:
     - name: System Information
       run: |
         echo "Operating System Info:"
-        sw_vers
+        lsb_release -a
         echo "-------------------"
-        echo "macOS Version:"
-        system_profiler SPSoftwareDataType
+        echo "Kernel Version:"
+        uname -a
+        echo "-------------------"
+        echo "CPU Info:"
+        lscpu
+        echo "-------------------"
+        echo "Memory Info:"
+        free -h
+        echo "-------------------"
+        echo "Disk Space:"
+        df -h
+        echo "-------------------"
+        echo "Ubuntu Version:"
+        cat /etc/os-release
         echo "-------------------"
         echo "Node Version:"
         node --version
         echo "-------------------"
         echo "NPM Version:"
         npm --version
-        echo "-------------------"
-        echo "Environment Variables:"
-        env | grep -i "path\|node\|npm"
 
     - name: Test Development Environment
       run: |
         echo "Testing development environment setup..."
         # Check for required development tools
+        echo "Development Tools:"
         which node
         which npm
         which git
-        # Check system architecture
-        uname -a
-        # Check available disk space
-        df -h
-        # Check memory info
-        vm_stat
+        which python3
+        which docker
+        echo "-------------------"
+        # Check system resources
+        echo "System Resources:"
+        nproc
+        grep MemTotal /proc/meminfo
+        echo "-------------------"
+        # Check Ubuntu packages
+        echo "Installed Packages:"
+        dpkg -l | grep -E "nodejs|npm|git|build-essential"
+
+    - name: Network Information
+      run: |
+        echo "Network Configuration:"
+        ip addr
+        echo "-------------------"
+        echo "Network Statistics:"
+        netstat -i
+        echo "-------------------"
+        echo "DNS Settings:"
+        cat /etc/resolv.conf
 
     - name: Node.js Setup Check
       run: |
@@ -52,3 +78,6 @@ jobs:
         node -e "console.log('Architecture:', process.arch)"
         node -e "console.log('Platform:', process.platform)"
         node -e "console.log('OS Release:', require('os').release())"
+        node -e "console.log('CPU Cores:', require('os').cpus().length)"
+        node -e "console.log('Total Memory:', require('os').totalmem() / 1024 / 1024 / 1024, 'GB')"
+        node -e "console.log('Free Memory:', require('os').freemem() / 1024 / 1024 / 1024, 'GB')"
