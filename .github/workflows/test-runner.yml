@@ -9,7 +9,7 @@ on:
 
 jobs:
   test-environment:
-    runs-on: ubuntu-latest  # Changed to Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -40,36 +40,36 @@ jobs:
         echo "NPM Version:"
         npm --version
 
-    - name: Test Development Environment
+    - name: Setup Kubernetes Context
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
       run: |
-        echo "Testing development environment setup..."
-        # Check for required development tools
-        echo "Development Tools:"
-        which node
-        which npm
-        which git
-        which python3
-        which docker
+        # Install kubectl
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+        
+        # Create kube config directory
+        mkdir -p $HOME/.kube
+        
+        # Decode and write kubeconfig
+        echo "$KUBE_CONFIG_DATA" | base64 -d > $HOME/.kube/config
+        
+        # Test connection
+        echo "Checking Kubernetes connection:"
+        kubectl config view
         echo "-------------------"
-        # Check system resources
-        echo "System Resources:"
-        nproc
-        grep MemTotal /proc/meminfo
+        echo "Current Context:"
+        kubectl config current-context
         echo "-------------------"
-        # Check Ubuntu packages
-        echo "Installed Packages:"
-        dpkg -l | grep -E "nodejs|npm|git|build-essential"
-
-    - name: Network Information
-      run: |
-        echo "Network Configuration:"
-        ip addr
+        echo "Cluster Info:"
+        kubectl cluster-info
         echo "-------------------"
-        echo "Network Statistics:"
-        netstat -i
+        echo "Namespaces:"
+        kubectl get ns
         echo "-------------------"
-        echo "DNS Settings:"
-        cat /etc/resolv.conf
+        echo "Pods in current namespace:"
+        kubectl get pods
 
     - name: Node.js Setup Check
       run: |
