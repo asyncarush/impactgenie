@@ -14,6 +14,49 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Minikube
+      run: |
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        sudo install minikube-linux-amd64 /usr/local/bin/minikube
+        rm minikube-linux-amd64
+
+    - name: Start Minikube
+      run: |
+        minikube start --driver=docker
+        minikube status
+
+    - name: Configure kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+        
+        echo "Checking cluster info:"
+        kubectl cluster-info
+        
+        echo "Current nodes:"
+        kubectl get nodes
+        
+        echo "Current namespaces:"
+        kubectl get ns
+        
+        echo "Pods in default namespace:"
+        kubectl get pods
+
+    - name: Copy Local Resources (if needed)
+      run: |
+        # Copy any local resources you need to deploy
+        kubectl create namespace your-namespace || true
+        
+        # Example: Deploy a test pod
+        kubectl run test-pod --image=nginx -n default
+        
+        echo "Waiting for pod to be ready..."
+        kubectl wait --for=condition=ready pod/test-pod --timeout=60s
+        
+        echo "Pod status:"
+        kubectl get pod test-pod
+
     - name: System Information
       run: |
         echo "Operating System Info:"
@@ -39,37 +82,6 @@ jobs:
         echo "-------------------"
         echo "NPM Version:"
         npm --version
-
-    - name: Setup Kubernetes Context
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-      run: |
-        # Install kubectl
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
-        
-        # Create kube config directory
-        mkdir -p $HOME/.kube
-        
-        # Decode and write kubeconfig
-        echo "$KUBE_CONFIG_DATA" | base64 -d > $HOME/.kube/config
-        
-        # Test connection
-        echo "Checking Kubernetes connection:"
-        kubectl config view
-        echo "-------------------"
-        echo "Current Context:"
-        kubectl config current-context
-        echo "-------------------"
-        echo "Cluster Info:"
-        kubectl cluster-info
-        echo "-------------------"
-        echo "Namespaces:"
-        kubectl get ns
-        echo "-------------------"
-        echo "Pods in current namespace:"
-        kubectl get pods
 
     - name: Node.js Setup Check
       run: |
