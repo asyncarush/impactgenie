@@ -34,24 +34,28 @@ const Header: React.FC = () => {
                 </motion.button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-white text-gray-800 border border-gray-200 px-6 py-2.5 rounded-full font-medium shadow-lg hover:shadow-blue-500/25 transition-shadow duration-300"
+                  className="bg-white text-gray-800 border border-gray-300 px-6 py-2.5 rounded-full font-medium hover:bg-gray-50 shadow-lg hover:shadow-blue-500/10 transition-shadow duration-300"
                 >
                   Sign Up
                 </motion.button>
               </SignUpButton>
             </>
           ) : (
-            <UserButton 
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: "w-10 h-10"
-                }
-              }}
-            />
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-full font-medium shadow-lg hover:shadow-blue-500/25 transition-shadow duration-300"
+                >
+                  Dashboard
+                </motion.button>
+              </Link>
+              <UserButton afterSignOutUrl="/" />
+            </div>
           )}
         </nav>
       </div>
