@@ -17,10 +17,7 @@ export async function GET(request: NextRequest) {
   const scopes = response.data[0].scopes;
 
   // also check if scope has above scopes other show erro rthat user needs additional scope for conencting youtube
-  if (
-    !scopes?.includes("https://www.googleapis.com/auth/youtube") &&
-    !scopes?.includes("https://www.googleapis.com/auth/youtube.force-ssl")
-  ) {
+  if (!scopes?.includes("https://www.googleapis.com/auth/youtube")) {
     return NextResponse.json(
       { error: "User needs additional scope for connecting YouTube" },
       { status: 401 }
@@ -29,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   // fetch channel data
   const channelResponse = await fetch(
-    `https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true&key=${process.env.YOUTUBE_API_KEY}`,
+    `https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -38,6 +35,7 @@ export async function GET(request: NextRequest) {
   );
 
   const channelData = await channelResponse.json();
+  console.log("All channelData", channelData);
 
   // console.log("Userid:", userId);
   // console.log("Current User:", user);

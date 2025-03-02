@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -6,10 +7,10 @@ import Link from "next/link";
 
 export default function YouTubeIntegrationPage() {
   const { isSignedIn, user } = useUser();
-  const [channel, setChannel] = useState(null);
+  const [channel, setChannel] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [needsYouTubeScope, setNeedsYouTubeScope] = useState(false);
+  // const [needsYouTubeScope, setNeedsYouTubeScope] = useState(false);
 
   useEffect(() => {
     const checkGoogleConnection = async () => {
@@ -24,9 +25,6 @@ export default function YouTubeIntegrationPage() {
         setError("Please connect your Google account to access YouTube data");
         return;
       }
-
-      // If Google account is connected, try fetching YouTube data
-      fetchYouTubeChannel();
     };
 
     checkGoogleConnection();
@@ -43,6 +41,9 @@ export default function YouTubeIntegrationPage() {
       // Try to fetch channel data using the Clerk's Google OAuth token
       const response = await fetch("/api/youtube/channel");
       const data = await response.json();
+      console.log("data", data);
+      const snippet = data.channelData.items[0];
+      setChannel(snippet);
 
       console.log("YouTube data:", data);
     } catch (err) {
@@ -101,7 +102,9 @@ export default function YouTubeIntegrationPage() {
                 className="w-24 h-24 rounded-full mb-4"
               />
             )}
-            <h2 className="text-xl font-bold">{channel.snippet.title}</h2>
+            <h2 className="text-xl font-bold text-black">
+              {channel.snippet.title}
+            </h2>
             {channel.snippet.customUrl && (
               <a
                 href={`https://youtube.com/${channel.snippet.customUrl}`}
