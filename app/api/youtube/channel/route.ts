@@ -38,10 +38,10 @@ export async function GET(request: NextRequest) {
   console.log("All channelData", channelData);
 
   // console.log("Userid:", userId);
-  // console.log("Current User:", user);
+  console.log("Current User:", user);
   // console.log("resonse Access token:", response);
   // console.log("resonse Scopes", scopes);
-  // console.log("resonse access token", accessToken);
+  console.log("resonse access token", accessToken);
 
   console.log("channel Data", channelData);
 

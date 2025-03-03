@@ -52,7 +52,7 @@ const Header: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                   className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-full font-medium shadow-lg hover:shadow-red-500/25 transition-shadow duration-300"
                 >
-                  YouTube Integration
+                  YouTube
                 </motion.button>
               </Link>
               <Link href="/dashboard">
