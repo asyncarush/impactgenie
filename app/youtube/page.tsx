@@ -116,12 +116,6 @@ export default function YouTubeIntegrationPage() {
           <p className="mb-4">Connect your YouTube channel to get started</p>
         </div>
       )}
-
-      {/* <div className="mt-8">
-        <Link href="/dashboard" className="text-blue-500 hover:underline">
-          Back to Dashboard
-        </Link>
-      </div> */}
     </div>
   );
 }
