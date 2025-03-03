@@ -19,7 +19,7 @@ async function getChannelData() {
     const client = await clerkClient();
     const response = await client.users.getUserOauthAccessToken(
       userId as string,
-      "oauth_google"
+      "google"
     );
     
     if (!response.data || response.data.length === 0) {

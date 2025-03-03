@@ -1,5 +1,5 @@
-import { useSprings, animated, SpringValue } from "@react-spring/web";
-import { useEffect, useRef, useState, MutableRefObject } from "react";
+import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 interface SplitTextProps {
   text?: string;
@@ -7,7 +7,7 @@ interface SplitTextProps {
   delay?: number;
   animationFrom?: { opacity: number; transform: string };
   animationTo?: { opacity: number; transform: string };
-  easing?: (t: number) => number;
+  easing?: string;
   threshold?: number;
   rootMargin?: string;
   textAlign?: "left" | "right" | "center" | "justify" | "initial" | "inherit";
@@ -20,7 +20,7 @@ const SplitText: React.FC<SplitTextProps> = ({
   delay = 100,
   animationFrom = { opacity: 0, transform: "translate3d(0,40px,0)" },
   animationTo = { opacity: 1, transform: "translate3d(0,0,0)" },
-  easing = (t: number) => t,
+  easing = "easeOut",
   threshold = 0.1,
   rootMargin = "-100px",
   textAlign = "center",
@@ -52,29 +52,16 @@ const SplitText: React.FC<SplitTextProps> = ({
     return () => observer.disconnect();
   }, [threshold, rootMargin]);
 
-  const springs = useSprings(
-    letters.length,
-    letters.map((_, i) => ({
-      from: animationFrom,
-      to: inView
-        ? async (next: (props: any) => Promise<void>) => {
-            await next(animationTo);
-            animatedCount.current += 1;
-            if (
-              animatedCount.current === letters.length &&
-              onLetterAnimationComplete
-            ) {
-              onLetterAnimationComplete();
-            }
-          }
-        : animationFrom,
-      delay: i * delay,
-      config: { easing },
-    }))
-  );
+  // Handle animation completion
+  const handleAnimationComplete = () => {
+    animatedCount.current += 1;
+    if (animatedCount.current === letters.length && onLetterAnimationComplete) {
+      onLetterAnimationComplete();
+    }
+  };
 
   return (
-    <p
+    <motion.p
       ref={ref}
       className={`split-parent ${className}`}
       style={{
@@ -86,7 +73,7 @@ const SplitText: React.FC<SplitTextProps> = ({
       }}
     >
       {words.map((word, wordIndex) => (
-        <span
+        <motion.span
           key={wordIndex}
           style={{ display: "inline-block", whiteSpace: "nowrap" }}
         >
@@ -96,24 +83,31 @@ const SplitText: React.FC<SplitTextProps> = ({
               letterIndex;
 
             return (
-              <animated.span
+              <motion.span
                 key={index}
                 style={{
-                  ...springs[index],
                   display: "inline-block",
                   willChange: "transform, opacity",
                 }}
+                initial={animationFrom}
+                animate={inView ? animationTo : animationFrom}
+                transition={{
+                  duration: 0.5,
+                  delay: index * (delay / 1000),
+                  ease: easing,
+                }}
+                onAnimationComplete={handleAnimationComplete}
               >
                 {letter}
-              </animated.span>
+              </motion.span>
             );
           })}
           <span style={{ display: "inline-block", width: "0.3em" }}>
             &nbsp;
           </span>
-        </span>
+        </motion.span>
       ))}
-    </p>
+    </motion.p>
   );
 };
 

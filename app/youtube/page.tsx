@@ -7,6 +7,8 @@ import Image from "next/image";
 import SpotlightCard from "@/components/SpotlightCards";
 import SplitText from "@/components/SplitText";
 import { useTheme } from "next-themes";
+import { motion, AnimatePresence } from "framer-motion";
+import Header from "@/app/components/Header";
 
 interface ChannelData {
   snippet: {
@@ -32,6 +34,7 @@ interface MetricCardProps {
   icon: React.ReactNode;
   spotlightColor: string;
   valueColor: string;
+  index?: number;
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({
@@ -40,19 +43,46 @@ const MetricCard: React.FC<MetricCardProps> = ({
   icon,
   spotlightColor,
   valueColor,
+  index = 0,
 }) => (
-  <SpotlightCard
-    className="p-6 rounded-2xl shadow-md card-custom transition-colors"
-    spotlightColor={spotlightColor}
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
+    whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
   >
-    <div className="flex flex-col items-center text-center">
-      <div className="icon-container mb-4">{icon}</div>
-      <p className={`metric-value ${valueColor}`}>
-        {parseInt(value).toLocaleString()}
-      </p>
-      <p className="metric-label">{label}</p>
-    </div>
-  </SpotlightCard>
+    <SpotlightCard
+      className="p-6 rounded-2xl shadow-md card-custom transition-colors"
+      spotlightColor={spotlightColor}
+    >
+      <div className="flex flex-col items-center text-center">
+        <motion.div 
+          className="icon-container mb-4"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 * (index + 1) }}
+        >
+          {icon}
+        </motion.div>
+        <motion.p 
+          className={`metric-value ${valueColor}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 * (index + 1) }}
+        >
+          {parseInt(value).toLocaleString()}
+        </motion.p>
+        <motion.p 
+          className="metric-label"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 * (index + 1) }}
+        >
+          {label}
+        </motion.p>
+      </div>
+    </SpotlightCard>
+  </motion.div>
 );
 
 export default function YouTubeIntegrationPage() {
@@ -60,7 +90,7 @@ export default function YouTubeIntegrationPage() {
   const [channel, setChannel] = useState<ChannelData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   const fetchYouTubeChannel = useCallback(async () => {
@@ -101,12 +131,6 @@ export default function YouTubeIntegrationPage() {
       fetchYouTubeChannel();
     }
   }, [isSignedIn, fetchYouTubeChannel]);
-
-  const toggleTheme = () => {
-    if (mounted) {
-      setTheme(theme === "dark" ? "light" : "dark");
-    }
-  };
 
   // Define spotlight colors based on theme
   const getSpotlightColor = (color: string) => {
@@ -193,15 +217,38 @@ export default function YouTubeIntegrationPage() {
     ),
   };
 
+  // Page transition variants
+  const pageVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.5 } },
+    exit: { opacity: 0, transition: { duration: 0.3 } }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-custom transition-colors duration-300 font-poppins">
+    <motion.div 
+      className="min-h-screen bg-gradient-custom transition-colors duration-300 font-poppins"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      <Header />
       <div className="container mx-auto px-4 py-8">
-        {/* Header with title and theme toggle */}
-        <div className="flex justify-between items-center mb-12">
+        {/* YouTube Dashboard title */}
+        <motion.div 
+          className="flex justify-center items-center mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="flex items-center">
-            <div className="icon-container icon-container-youtube mr-4 rounded-2xl">
+            <motion.div 
+              className="icon-container icon-container-youtube mr-4 rounded-2xl"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               {icons.youtube}
-            </div>
+            </motion.div>
             <SplitText
               text={`YouTube Dashboard`}
               className="text-3xl font-bold text-gray-800 dark:text-white font-poppins"
@@ -216,109 +263,157 @@ export default function YouTubeIntegrationPage() {
               }
             />
           </div>
-
-          <div className="theme-toggle" onClick={toggleTheme}>
-            <div className="theme-toggle-thumb"></div>
-          </div>
-        </div>
+        </motion.div>
 
         {/* Loading state */}
-        {isLoading && (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin h-8 w-8 border-4 border-red-500 dark:border-gray-400 border-t-transparent rounded-full"></div>
-          </div>
-        )}
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div 
+              className="flex justify-center items-center h-64"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div 
+                className="h-8 w-8 border-4 border-red-500 dark:border-gray-400 border-t-transparent rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              ></motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Error state */}
-        {error && (
-          <div className="bg-red-50 dark:bg-gray-900/30 border-l-4 border-red-500 dark:border-gray-500 rounded-lg p-4 mb-6">
-            <p className="text-red-600 dark:text-gray-300 font-poppins">
-              {error}
-            </p>
-          </div>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              className="bg-red-50 dark:bg-gray-900/30 border-l-4 border-red-500 dark:border-gray-500 rounded-lg p-4 mb-6"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.p 
+                className="text-red-600 dark:text-gray-300 font-poppins"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { delay: 0.2 } }}
+              >
+                {error}
+              </motion.p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Channel data display */}
-        {channel && (
-          <>
-            {/* Main channel info with side-by-side layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-              {/* Left side - Profile and channel name */}
-              <SpotlightCard
-                className="lg:col-span-1 p-8 rounded-2xl shadow-md card-custom transition-colors channel-card"
-                spotlightColor={getSpotlightColor("red")}
-              >
-                <div className="flex flex-col items-center">
-                  {channel.snippet.thumbnails?.medium?.url && (
-                    <div className="relative mb-6">
-                      <Image
-                        src={channel.snippet.thumbnails.medium.url}
-                        alt="Youtube Profile"
-                        width={120}
-                        height={120}
-                        className="rounded-full border-2 border-white dark:border-gray-800 shadow-md profile-image"
-                      />
-                    </div>
-                  )}
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3 font-poppins">
-                      {channel.snippet.title}
-                    </h2>
-                    {channel.snippet.customUrl && (
-                      <a
-                        href={`https://youtube.com/${channel.snippet.customUrl}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-red-500 dark:text-gray-300 hover:text-red-600 dark:hover:text-white text-sm font-poppins"
-                      >
-                        <svg
-                          className="w-4 h-4 mr-1"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
+        <AnimatePresence>
+          {channel && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Main channel info with side-by-side layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+                {/* Left side - Profile and channel name */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <SpotlightCard
+                    className="lg:col-span-1 p-8 rounded-2xl shadow-md card-custom transition-colors channel-card"
+                    spotlightColor={getSpotlightColor("red")}
+                  >
+                    <div className="flex flex-col items-center">
+                      {channel.snippet.thumbnails?.medium?.url && (
+                        <motion.div 
+                          className="relative mb-6"
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                          whileHover={{ scale: 1.05 }}
                         >
-                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                        </svg>
-                        @{channel.snippet.customUrl}
-                      </a>
-                    )}
-                  </div>
+                          <Image
+                            src={channel.snippet.thumbnails.medium.url}
+                            alt="Youtube Profile"
+                            width={120}
+                            height={120}
+                            className="rounded-full border-2 border-white dark:border-gray-800 shadow-md profile-image"
+                          />
+                        </motion.div>
+                      )}
+                      <motion.div 
+                        className="text-center"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                      >
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3 font-poppins">
+                          {channel.snippet.title}
+                        </h2>
+                        {channel.snippet.customUrl && (
+                          <motion.a
+                            href={`https://youtube.com/${channel.snippet.customUrl}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-red-500 dark:text-gray-300 hover:text-red-600 dark:hover:text-white text-sm font-poppins"
+                            whileHover={{ scale: 1.05, x: 3 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                          >
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                            </svg>
+                            @{channel.snippet.customUrl}
+                          </motion.a>
+                        )}
+                      </motion.div>
+                    </div>
+                  </SpotlightCard>
+                </motion.div>
+
+                {/* Right side - Statistics cards */}
+                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {channel.statistics && (
+                    <>
+                      <MetricCard
+                        value={channel.statistics.subscriberCount}
+                        label="Subscribers"
+                        icon={icons.subscribers}
+                        spotlightColor={getSpotlightColor("purple")}
+                        valueColor="text-purple-600 dark:text-gray-200"
+                        index={0}
+                      />
+
+                      <MetricCard
+                        value={channel.statistics.videoCount}
+                        label="Videos"
+                        icon={icons.videos}
+                        spotlightColor={getSpotlightColor("teal")}
+                        valueColor="text-teal-600 dark:text-gray-200"
+                        index={1}
+                      />
+
+                      <MetricCard
+                        value={channel.statistics.viewCount}
+                        label="Total Views"
+                        icon={icons.views}
+                        spotlightColor={getSpotlightColor("amber")}
+                        valueColor="text-amber-600 dark:text-gray-200"
+                        index={2}
+                      />
+                    </>
+                  )}
                 </div>
-              </SpotlightCard>
-
-              {/* Right side - Statistics cards */}
-              <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {channel.statistics && (
-                  <>
-                    <MetricCard
-                      value={channel.statistics.subscriberCount}
-                      label="Subscribers"
-                      icon={icons.subscribers}
-                      spotlightColor={getSpotlightColor("purple")}
-                      valueColor="text-purple-600 dark:text-gray-200"
-                    />
-
-                    <MetricCard
-                      value={channel.statistics.videoCount}
-                      label="Videos"
-                      icon={icons.videos}
-                      spotlightColor={getSpotlightColor("teal")}
-                      valueColor="text-teal-600 dark:text-gray-200"
-                    />
-
-                    <MetricCard
-                      value={channel.statistics.viewCount}
-                      label="Total Views"
-                      icon={icons.views}
-                      spotlightColor={getSpotlightColor("amber")}
-                      valueColor="text-amber-600 dark:text-gray-200"
-                    />
-                  </>
-                )}
               </div>
-            </div>
-          </>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
