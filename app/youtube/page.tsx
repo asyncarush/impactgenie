@@ -417,8 +417,8 @@ export default function YouTubeIntegrationPage() {
               </div>
             </motion.div>
           )}
+          <Top10Videos />
         </AnimatePresence>
-        <Top10Videos />
       </div>
     </motion.div>
   );

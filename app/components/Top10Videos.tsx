@@ -1,4 +1,4 @@
-"use cleint";
+"use client";
 
 import { getTrendingVideos } from "@/config/youtube.axios";
 import React, { useEffect, useState } from "react";

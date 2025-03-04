@@ -1,34 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTrendingVideos, getVideoStats } from "@/config/youtube.axios";
+import { getVideoStats } from "@/config/youtube.axios";
+import { useSearchParams } from "next/navigation";
 
 export async function GET(request: NextRequest) {
-  const allVideosData = new Map<string, {}>();
+  const params = useSearchParams();
+  const videoId = params.get("Id");
 
   try {
-    const allVideos = await getTrendingVideos();
-    // Get video stats
+    const videoStats = await getVideoStats(videoId);
+    // console.log("All videos fetched successfully:", allVideos);
 
-    for (const video of allVideos) {
-      const videoId = video.snippet.resourceId.videoId;
-      const videoStats = await getVideoStats(videoId);
-      let videoData = {
-        channelTitle: video.snippet.channelTitle,
-        title: video.snippet.title,
-        description: video.snippet.description,
-        thumbnail: video.snippet.thumbnails,
-        likes: videoStats.likeCount,
-        comments: videoStats.commentCount,
-        views: videoStats.viewCount,
-        dislikes: videoStats.dislikeCount,
-      };
-
-      allVideosData.set(video.id, videoData);
-    }
+    //
 
     return NextResponse.json({
       success: true,
       message: "All videos fetched successfully",
-      allVideosData: Array.from(allVideosData.entries()),
+      videoStats,
     });
   } catch (error) {
     console.error("Error in YouTube channel route:", error);

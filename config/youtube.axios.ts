@@ -79,8 +79,6 @@ async function getTrendingVideos() {
       `/playlistItems?part=snippet&maxResults=10&playlistId=${playlistId}`
     );
     const top10Videos = response.data.items;
-    console.log(top10Videos);
-
     return top10Videos;
   } catch (error) {
     const err = error as AxiosError;
@@ -91,4 +89,21 @@ async function getTrendingVideos() {
   }
 }
 
-export { getChannelData, getTrendingVideos };
+async function getVideoStats(videoId: string | null) {
+  try {
+    const getVideoData = await API_YOUTUBE.get(
+      `/videos?part=statistics&id=${videoId}`
+    );
+    const videoData = await getVideoData.data.items[0].statistics;
+
+    return videoData;
+  } catch (error) {
+    const err = error as AxiosError;
+    console.error("YouTube API Error:", err.response?.data || err.message);
+    throw new Error(
+      err.response?.data?.error?.message || "Unable to get Stats of  Video"
+    );
+  }
+}
+
+export { getChannelData, getTrendingVideos, getVideoStats };
