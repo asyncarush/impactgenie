@@ -34,7 +34,14 @@ export default function RootLayout({
   return (
     <ClerkProvider
       appearance={{
-        variables: { fontFamily: "Poppins", fontWeight: 400 },
+        variables: {
+          fontFamily: "Poppins",
+          fontWeight: {
+            normal: 400,
+            medium: 500,
+            bold: 600,
+          },
+        },
       }}
     >
       <html lang="en" suppressHydrationWarning>

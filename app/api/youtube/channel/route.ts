@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getChannelData } from "@/config/youtube.axios";
 
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
   try {
     const channelData = await getChannelData();
     console.log("Channel data fetched successfully:", channelData);
 
-    return NextResponse.json({
+    // Create response with cache headers
+    const response = NextResponse.json({
       success: true,
       message: "YouTube channel data retrieved successfully",
       channelData,
     });
+    
+    // Add cache control headers
+    response.headers.set('Cache-Control', 'public, max-age=300'); // 5 minutes
+    
+    return response;
   } catch (error) {
     console.error("Error in YouTube channel route:", error);
 

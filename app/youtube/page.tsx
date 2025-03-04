@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -27,6 +26,10 @@ interface ChannelData {
     subscriberCount: string;
     videoCount: string;
     viewCount: string;
+    likeCount?: string;
+    commentCount?: string;
+    shareCount?: string;
+    last10ViewsCount?: string;
   };
 }
 
@@ -36,7 +39,6 @@ export default function YouTubeIntegrationPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
   const fetchYouTubeChannel = useCallback(async () => {
     if (!isSignedIn) return;
@@ -71,7 +73,6 @@ export default function YouTubeIntegrationPage() {
   }, [isSignedIn]);
 
   useEffect(() => {
-    setMounted(true);
     if (isSignedIn) {
       fetchYouTubeChannel();
     }
@@ -361,7 +362,56 @@ export default function YouTubeIntegrationPage() {
               </div>
             </motion.div>
           )}
-          <Top10Videos />
+          {isSignedIn && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-8"
+            >
+              {/* Channel Stats */}
+              <div>
+                <h2 className="text-2xl font-semibold mb-6">
+                  Channel Analytics
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
+                    <div className="text-sm text-gray-400">Last 10 Views</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-200">
+                      {parseInt(channel?.statistics?.last10ViewsCount || "0").toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
+                    <div className="text-sm text-gray-400">Last 10 Likes</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-200">
+                      {parseInt(channel?.statistics?.likeCount || "0").toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
+                    <div className="text-sm text-gray-400">Last 10 Comments</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-200">
+                      {parseInt(channel?.statistics?.commentCount || "0").toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
+                    <div className="text-sm text-gray-400">Engagement Rate</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-200">
+                      {channel?.statistics?.last10ViewsCount
+                        ? `${(
+                            (parseInt(channel.statistics.likeCount || "0") + 
+                             parseInt(channel.statistics.commentCount || "0")) / 
+                            parseInt(channel.statistics.last10ViewsCount) * 100
+                          ).toFixed(2)}%`
+                        : "0%"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Videos Section */}
+              <Top10Videos />
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </motion.div>

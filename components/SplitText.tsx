@@ -102,7 +102,7 @@ const SplitText: React.FC<SplitTextProps> = ({
               </motion.span>
             );
           })}
-          <span style={{ display: "inline-block", width: "0.3em" }}>
+          <span key={`space-${wordIndex}`} style={{ display: "inline-block", width: "0.3em" }}>
             &nbsp;
           </span>
         </motion.span>

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getVideoStats } from "@/config/youtube.axios";
-import { useSearchParams } from "next/navigation";
 
 export async function GET(request: NextRequest) {
-  const params = useSearchParams();
+  const params = request.nextUrl.searchParams;
   const videoId = params.get("Id");
 
   try {
