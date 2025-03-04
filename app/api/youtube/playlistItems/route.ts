@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getChannelData } from "@/config/youtube.axios";
+import { getTrendingVideos } from "@/config/youtube.axios";
 
 export async function GET(request: NextRequest) {
   try {
-    const channelData = await getChannelData();
-    console.log("Channel data fetched successfully:", channelData);
+    const allVideos = await getTrendingVideos();
+    console.log("All videos fetched successfully:", allVideos);
 
     return NextResponse.json({
       success: true,
-      message: "YouTube channel data retrieved successfully",
-      channelData,
+      message: "All videos fetched successfully",
+      allVideos,
     });
   } catch (error) {
     console.error("Error in YouTube channel route:", error);
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: "Failed to fetch YouTube data",
+        error: "Failed to fetch Videos",
         message: errorMessage,
       },
       { status: 500 }

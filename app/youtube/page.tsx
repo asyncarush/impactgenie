@@ -9,6 +9,7 @@ import SplitText from "@/components/SplitText";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/app/components/Header";
+import Top10Videos from "../components/Top10Videos";
 
 interface ChannelData {
   snippet: {
@@ -56,7 +57,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
       spotlightColor={spotlightColor}
     >
       <div className="flex flex-col items-center text-center">
-        <motion.div 
+        <motion.div
           className="icon-container mb-4"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -64,7 +65,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
         >
           {icon}
         </motion.div>
-        <motion.p 
+        <motion.p
           className={`metric-value ${valueColor}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -72,7 +73,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
         >
           {parseInt(value).toLocaleString()}
         </motion.p>
-        <motion.p 
+        <motion.p
           className="metric-label"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -221,11 +222,11 @@ export default function YouTubeIntegrationPage() {
   const pageVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { duration: 0.5 } },
-    exit: { opacity: 0, transition: { duration: 0.3 } }
+    exit: { opacity: 0, transition: { duration: 0.3 } },
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen bg-gradient-custom transition-colors duration-300 font-poppins"
       variants={pageVariants}
       initial="initial"
@@ -235,14 +236,14 @@ export default function YouTubeIntegrationPage() {
       <Header />
       <div className="container mx-auto px-4 py-8">
         {/* YouTube Dashboard title */}
-        <motion.div 
+        <motion.div
           className="flex justify-center items-center mb-12"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center">
-            <motion.div 
+            <motion.div
               className="icon-container icon-container-youtube mr-4 rounded-2xl"
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -268,13 +269,13 @@ export default function YouTubeIntegrationPage() {
         {/* Loading state */}
         <AnimatePresence>
           {isLoading && (
-            <motion.div 
+            <motion.div
               className="flex justify-center items-center h-64"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <motion.div 
+              <motion.div
                 className="h-8 w-8 border-4 border-red-500 dark:border-gray-400 border-t-transparent rounded-full"
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
@@ -286,14 +287,14 @@ export default function YouTubeIntegrationPage() {
         {/* Error state */}
         <AnimatePresence>
           {error && (
-            <motion.div 
+            <motion.div
               className="bg-red-50 dark:bg-gray-900/30 border-l-4 border-red-500 dark:border-gray-500 rounded-lg p-4 mb-6"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <motion.p 
+              <motion.p
                 className="text-red-600 dark:text-gray-300 font-poppins"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { delay: 0.2 } }}
@@ -327,7 +328,7 @@ export default function YouTubeIntegrationPage() {
                   >
                     <div className="flex flex-col items-center">
                       {channel.snippet.thumbnails?.medium?.url && (
-                        <motion.div 
+                        <motion.div
                           className="relative mb-6"
                           initial={{ scale: 0.8, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -343,7 +344,7 @@ export default function YouTubeIntegrationPage() {
                           />
                         </motion.div>
                       )}
-                      <motion.div 
+                      <motion.div
                         className="text-center"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -359,16 +360,20 @@ export default function YouTubeIntegrationPage() {
                             rel="noopener noreferrer"
                             className="inline-flex items-center text-red-500 dark:text-gray-300 hover:text-red-600 dark:hover:text-white text-sm font-poppins"
                             whileHover={{ scale: 1.05, x: 3 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 400,
+                              damping: 15,
+                            }}
                           >
                             <svg
-                              className="w-4 h-4 mr-1"
+                              className="w-4 h-4 mr-1 text-red-600"
                               fill="currentColor"
                               viewBox="0 0 24 24"
                             >
                               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                             </svg>
-                            @{channel.snippet.customUrl}
+                            {channel.snippet.customUrl}
                           </motion.a>
                         )}
                       </motion.div>
@@ -413,6 +418,7 @@ export default function YouTubeIntegrationPage() {
             </motion.div>
           )}
         </AnimatePresence>
+        <Top10Videos />
       </div>
     </motion.div>
   );
