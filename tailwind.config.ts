@@ -18,6 +18,9 @@ export default {
         mono: ["var(--font-geist-mono)"],
         poppins: ["var(--font-poppins)"],
       },
+      fontSize: {
+        'xxs': '0.625rem', // 10px
+      },
     },
   },
   plugins: [],

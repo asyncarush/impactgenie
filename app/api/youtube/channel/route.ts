@@ -45,3 +45,32 @@ export async function GET(_request: NextRequest) {
     );
   }
 }
+
+async function getHistoricalData(channelId: string, period: '7d' | '1m' | '3m') {
+  const endDate = new Date();
+  let startDate = new Date();
+
+  switch (period) {
+    case '7d':
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case '1m':
+      startDate.setMonth(endDate.getMonth() - 1);
+      break;
+    case '3m':
+      startDate.setMonth(endDate.getMonth() - 3);
+      break;
+  }
+
+  // Fetch data from YouTube API
+  const response = await youtubeAxios.get('/channels', {
+    params: {
+      id: channelId,
+      part: 'statistics',
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    }
+  });
+
+  return response.data.items[0].statistics;
+}

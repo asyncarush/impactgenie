@@ -31,6 +31,23 @@ interface ChannelData {
     shareCount?: string;
     last10ViewsCount?: string;
   };
+  historicalData?: {
+    "7d": {
+      subscriberCount: string;
+      viewCount: string;
+      videoCount: string;
+    };
+    "1m": {
+      subscriberCount: string;
+      viewCount: string;
+      videoCount: string;
+    };
+    "3m": {
+      subscriberCount: string;
+      viewCount: string;
+      videoCount: string;
+    };
+  };
 }
 
 export default function YouTubeIntegrationPage() {
@@ -328,11 +345,12 @@ export default function YouTubeIntegrationPage() {
 
                 {/* Right side - Statistics cards */}
                 <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  {channel.statistics && (
+                  {channel.statistics && channel.historicalData && (
                     <>
                       <MetricCard
-                        value={channel.statistics.subscriberCount}
                         label="Subscribers"
+                        value={channel.statistics.subscriberCount}
+                        historicalData={channel.historicalData}
                         icon={icons.subscribers}
                         spotlightColor={getSpotlightColor("purple")}
                         valueColor="text-purple-600 dark:text-gray-200"
@@ -340,8 +358,9 @@ export default function YouTubeIntegrationPage() {
                       />
 
                       <MetricCard
-                        value={channel.statistics.videoCount}
                         label="Videos"
+                        value={channel.statistics.videoCount}
+                        historicalData={channel.historicalData}
                         icon={icons.videos}
                         spotlightColor={getSpotlightColor("teal")}
                         valueColor="text-teal-600 dark:text-gray-200"
@@ -349,13 +368,23 @@ export default function YouTubeIntegrationPage() {
                       />
 
                       <MetricCard
-                        value={channel.statistics.viewCount}
                         label="Total Views"
+                        value={channel.statistics.viewCount}
+                        historicalData={channel.historicalData}
                         icon={icons.views}
                         spotlightColor={getSpotlightColor("amber")}
                         valueColor="text-amber-600 dark:text-gray-200"
                         index={2}
                       />
+                      
+                      <div className="col-span-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Hover over metrics to see historical data for 7, 30, and 90 days simultaneously (simulated for demonstration).
+                        </p>
+                      </div>
                     </>
                   )}
                 </div>
@@ -378,19 +407,27 @@ export default function YouTubeIntegrationPage() {
                   <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
                     <div className="text-sm text-gray-400">Last 10 Views</div>
                     <div className="text-lg font-semibold mt-1 text-gray-200">
-                      {parseInt(channel?.statistics?.last10ViewsCount || "0").toLocaleString()}
+                      {parseInt(
+                        channel?.statistics?.last10ViewsCount || "0"
+                      ).toLocaleString()}
                     </div>
                   </div>
                   <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
                     <div className="text-sm text-gray-400">Last 10 Likes</div>
                     <div className="text-lg font-semibold mt-1 text-gray-200">
-                      {parseInt(channel?.statistics?.likeCount || "0").toLocaleString()}
+                      {parseInt(
+                        channel?.statistics?.likeCount || "0"
+                      ).toLocaleString()}
                     </div>
                   </div>
                   <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
-                    <div className="text-sm text-gray-400">Last 10 Comments</div>
+                    <div className="text-sm text-gray-400">
+                      Last 10 Comments
+                    </div>
                     <div className="text-lg font-semibold mt-1 text-gray-200">
-                      {parseInt(channel?.statistics?.commentCount || "0").toLocaleString()}
+                      {parseInt(
+                        channel?.statistics?.commentCount || "0"
+                      ).toLocaleString()}
                     </div>
                   </div>
                   <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
@@ -398,9 +435,12 @@ export default function YouTubeIntegrationPage() {
                     <div className="text-lg font-semibold mt-1 text-gray-200">
                       {channel?.statistics?.last10ViewsCount
                         ? `${(
-                            (parseInt(channel.statistics.likeCount || "0") + 
-                             parseInt(channel.statistics.commentCount || "0")) / 
-                            parseInt(channel.statistics.last10ViewsCount) * 100
+                            ((parseInt(channel.statistics.likeCount || "0") +
+                              parseInt(
+                                channel.statistics.commentCount || "0"
+                              )) /
+                              parseInt(channel.statistics.last10ViewsCount)) *
+                            100
                           ).toFixed(2)}%`
                         : "0%"}
                     </div>
