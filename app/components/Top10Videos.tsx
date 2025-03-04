@@ -10,14 +10,12 @@ export default function Top10Videos() {
     const fetchTop10Videos = async () => {
       const videos = await fetch("/api/youtube/playlistItems");
       const data = await videos.json();
-
-      console.log(data);
       setAllVideos(data);
     };
     fetchTop10Videos();
 
     console.log(allvideos);
-  }, []);
+  }, [allvideos]);
 
   return (
     <div>
