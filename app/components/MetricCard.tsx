@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import SpotlightCard from "@/components/SpotlightCards";
 import { useState } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface HistoricalData {
   subscriberCount: string;
@@ -35,6 +36,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   historicalData,
 }) => {
   const [isHovering, setIsHovering] = useState(false);
+  const { theme } = useTheme();
 
   const getValueForPeriod = (period: TimePeriod): string => {
     if (!historicalData) return "N/A";
@@ -105,7 +107,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
         onMouseLeave={() => setIsHovering(false)}
       >
         <SpotlightCard
-          className="p-6 rounded-2xl shadow-md card-custom transition-colors"
+          className={`p-6 rounded-2xl shadow-md card-custom transition-colors ${theme === "dark" ? "bg-black" : "bg-white"}`}
           spotlightColor={spotlightColor || "#4f46e5"}
         >
           <div className="flex flex-col items-center text-center">

@@ -189,7 +189,7 @@ export default function YouTubeIntegrationPage() {
 
   return (
     <motion.div
-      className="min-h-screen bg-gradient-custom transition-colors duration-300 font-poppins"
+      className={`min-h-screen ${theme === "light" ? "bg-gradient-light" : "bg-gradient-custom"} transition-colors duration-300 font-poppins`}
       variants={pageVariants}
       initial="initial"
       animate="animate"
@@ -250,14 +250,14 @@ export default function YouTubeIntegrationPage() {
         <AnimatePresence>
           {error && (
             <motion.div
-              className="bg-red-50 dark:bg-gray-900/30 border-l-4 border-red-500 dark:border-gray-500 rounded-lg p-4 mb-6"
+              className={`${theme === "dark" ? "bg-black" : "bg-red-50"} border-l-4 border-red-500 rounded-lg p-4 mb-6`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
               <motion.p
-                className="text-red-600 dark:text-gray-300 font-poppins"
+                className="text-red-600 dark:text-red-400 font-poppins"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { delay: 0.2 } }}
               >
@@ -285,7 +285,7 @@ export default function YouTubeIntegrationPage() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
                   <SpotlightCard
-                    className="lg:col-span-1 p-8 rounded-2xl shadow-md card-custom transition-colors channel-card"
+                    className={`lg:col-span-1 p-8 rounded-2xl shadow-md card-custom transition-colors channel-card ${theme === "dark" ? "bg-black" : "bg-white"}`}
                     spotlightColor={getSpotlightColor("red")}
                   >
                     <div className="flex flex-col items-center">
@@ -400,39 +400,39 @@ export default function YouTubeIntegrationPage() {
             >
               {/* Channel Stats */}
               <div>
-                <h2 className="text-2xl font-semibold mb-6">
+                <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-white">
                   Channel Analytics
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
-                    <div className="text-sm text-gray-400">Last 10 Views</div>
-                    <div className="text-lg font-semibold mt-1 text-gray-200">
+                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Last 10 Views</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
                       {parseInt(
                         channel?.statistics?.last10ViewsCount || "0"
                       ).toLocaleString()}
                     </div>
                   </div>
-                  <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
-                    <div className="text-sm text-gray-400">Last 10 Likes</div>
-                    <div className="text-lg font-semibold mt-1 text-gray-200">
+                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Last 10 Likes</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
                       {parseInt(
                         channel?.statistics?.likeCount || "0"
                       ).toLocaleString()}
                     </div>
                   </div>
-                  <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
-                    <div className="text-sm text-gray-400">
+                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       Last 10 Comments
                     </div>
-                    <div className="text-lg font-semibold mt-1 text-gray-200">
+                    <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
                       {parseInt(
                         channel?.statistics?.commentCount || "0"
                       ).toLocaleString()}
                     </div>
                   </div>
-                  <div className="bg-[#1a1a1a] rounded-lg p-4 shadow-sm">
-                    <div className="text-sm text-gray-400">Engagement Rate</div>
-                    <div className="text-lg font-semibold mt-1 text-gray-200">
+                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Engagement Rate</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
                       {channel?.statistics?.last10ViewsCount
                         ? `${(
                             ((parseInt(channel.statistics.likeCount || "0") +

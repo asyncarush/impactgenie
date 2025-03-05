@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 
 interface VideoData {
   id: string;
@@ -26,6 +27,7 @@ interface ApiResponse {
 }
 
 export default function Top10Videos() {
+  const { theme } = useTheme();
   const [videos, setVideos] = useState<VideoData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,12 +65,12 @@ export default function Top10Videos() {
       <div className="w-full max-w-3xl">
         <div className="animate-pulse space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3 bg-white/5 rounded-lg p-2">
+            <div key={i} className={`flex items-center gap-3 ${theme === "dark" ? "bg-black" : "bg-gray-50"} rounded-lg p-2 border border-gray-100 dark:border-gray-800`}>
               <div className="w-5 text-sm text-gray-500">{i + 1}</div>
-              <div className="flex-none w-24 aspect-video bg-white/10 rounded" />
+              <div className="flex-none w-24 aspect-video bg-gray-200 dark:bg-gray-800 rounded" />
               <div className="flex-1 space-y-1.5">
-                <div className="h-3.5 bg-white/10 rounded w-3/4" />
-                <div className="h-2.5 bg-white/10 rounded w-1/2" />
+                <div className="h-3.5 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
+                <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -80,7 +82,7 @@ export default function Top10Videos() {
   if (error) {
     return (
       <div className="w-full max-w-3xl">
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 text-sm text-red-400">
+        <div className={`${theme === "dark" ? "bg-red-900/20" : "bg-red-50"} border ${theme === "dark" ? "border-red-800/30" : "border-red-200"} rounded-lg p-2 text-sm ${theme === "dark" ? "text-red-400" : "text-red-600"}`}>
           Error: {error}
         </div>
       </div>
@@ -89,6 +91,7 @@ export default function Top10Videos() {
 
   return (
     <div className="w-full max-w-3xl">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-white">Top 10 Videos</h2>
       <div className="space-y-2">
         {videos.slice(0, 10).map((video, index) => {
           const thumbnailUrl = video.thumbnail.medium?.url || video.thumbnail.default.url;
@@ -103,7 +106,7 @@ export default function Top10Videos() {
               key={`video-${video.id}-${index}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-lg p-2 transition-colors group"
+              className={`flex items-center gap-3 ${theme === "dark" ? "bg-black" : "bg-gray-50"} ${theme === "dark" ? "hover:bg-gray-900" : "hover:bg-gray-100"} rounded-lg p-2 transition-colors group border border-gray-100 dark:border-gray-800`}
             >
               <div className="w-5 text-sm text-gray-500">{index + 1}</div>
               <div className="relative flex-none w-24 aspect-video rounded overflow-hidden">
@@ -117,10 +120,10 @@ export default function Top10Videos() {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium line-clamp-1 group-hover:text-blue-400 transition-colors">
+                <h3 className="text-sm font-medium text-gray-800 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {video.title}
                 </h3>
-                <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
                   <span>{formattedViews} views</span>
                   <span>•</span>
                   <span>{formattedLikes} likes</span>

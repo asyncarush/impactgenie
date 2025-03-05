@@ -1,6 +1,5 @@
 import axios, { AxiosError } from "axios";
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { access } from "fs";
 
 // Define the YouTube API error response structure
 interface YouTubeApiErrorResponse {
@@ -209,7 +208,7 @@ const getCachedHistoricalData = async (channelId: string, period: '7d' | '1m' | 
 
   const data = await getHistoricalData(channelId, period);
   historicalDataCache.set(cacheKey, data);
-  setTimeout(() => historicalDataCache.delete(cacheKey), 300000); // 5 minute cache
+  setTimeout(() => historicalDataCache.delete(cacheKey), CACHE_DURATION); // Use the same cache duration constant
   return data;
 };
 
