@@ -1,0 +1,459 @@
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
+import { useUser } from "@clerk/nextjs";
+import Image from "next/image";
+import SpotlightCard from "@/components/SpotlightCards";
+import SplitText from "@/components/SplitText";
+import { useTheme } from "next-themes";
+import { motion, AnimatePresence } from "framer-motion";
+import Header from "@/app/components/Header";
+import Top10Videos from "../components/Top10Videos";
+import MetricCard from "../components/MetricCard";
+
+interface ChannelData {
+  snippet: {
+    title: string;
+    description?: string;
+    thumbnails: {
+      medium: {
+        url: string;
+      };
+    };
+    customUrl?: string;
+  };
+  statistics?: {
+    subscriberCount: string;
+    videoCount: string;
+    viewCount: string;
+    likeCount?: string;
+    commentCount?: string;
+    shareCount?: string;
+    last10ViewsCount?: string;
+  };
+  historicalData?: {
+    "7d": {
+      subscriberCount: string;
+      viewCount: string;
+      videoCount: string;
+    };
+    "1m": {
+      subscriberCount: string;
+      viewCount: string;
+      videoCount: string;
+    };
+    "3m": {
+      subscriberCount: string;
+      viewCount: string;
+      videoCount: string;
+    };
+  };
+}
+
+export default function YouTubeIntegrationPage() {
+  const { isSignedIn } = useUser();
+  const [channel, setChannel] = useState<ChannelData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { theme } = useTheme();
+
+  const fetchYouTubeChannel = useCallback(async () => {
+    if (!isSignedIn) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/youtube/channel");
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error === "YouTube API access denied") {
+          setError(data.message || "Additional YouTube permissions required");
+        } else {
+          setError(data.error || "Failed to fetch YouTube channel data");
+        }
+        return;
+      }
+
+      if (data.success && data.channelData?.items?.length > 0) {
+        setChannel(data.channelData.items[0]);
+      } else {
+        setError("No YouTube channel found for this account");
+      }
+    } catch (err) {
+      console.error("Error fetching YouTube data:", err);
+      setError("An error occurred while fetching YouTube data");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchYouTubeChannel();
+    }
+  }, [isSignedIn, fetchYouTubeChannel]);
+
+  // Define spotlight colors based on theme
+  const getSpotlightColor = (color: string) => {
+    if (theme === "dark") {
+      switch (color) {
+        case "red":
+          return "rgba(248, 113, 113, 0.15)";
+        case "purple":
+          return "rgba(167, 139, 250, 0.15)";
+        case "teal":
+          return "rgba(45, 212, 191, 0.15)";
+        case "amber":
+          return "rgba(251, 191, 36, 0.15)";
+        default:
+          return "rgba(255, 255, 255, 0.05)";
+      }
+    } else {
+      switch (color) {
+        case "red":
+          return "rgba(239, 68, 68, 0.1)";
+        case "purple":
+          return "rgba(139, 92, 246, 0.1)";
+        case "teal":
+          return "rgba(20, 184, 166, 0.1)";
+        case "amber":
+          return "rgba(245, 158, 11, 0.1)";
+        default:
+          return "rgba(0, 0, 0, 0.05)";
+      }
+    }
+  };
+
+  // Icons for metric cards
+  const icons = {
+    subscribers: (
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className="icon-container-subscribers"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+        />
+      </svg>
+    ),
+    videos: (
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className="icon-container-videos"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+    views: (
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className="icon-container-views"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
+    youtube: (
+      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+      </svg>
+    ),
+  };
+
+  // Page transition variants
+  const pageVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.5 } },
+    exit: { opacity: 0, transition: { duration: 0.3 } },
+  };
+
+  return (
+    <motion.div
+      className={`min-h-screen ${theme === "light" ? "bg-gradient-light" : "bg-gradient-custom"} transition-colors duration-300 font-poppins`}
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        {/* YouTube Dashboard title */}
+        <motion.div
+          className="flex justify-center items-center mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center">
+            <motion.div
+              className="icon-container icon-container-youtube mr-4 rounded-2xl"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              {icons.youtube}
+            </motion.div>
+            <SplitText
+              text={`YouTube Dashboard`}
+              className="text-3xl font-bold text-gray-800 dark:text-white font-poppins"
+              delay={100}
+              animationFrom={{ opacity: 0, transform: "translate3d(0,30px,0)" }}
+              animationTo={{ opacity: 1, transform: "translate3d(0,0,0)" }}
+              easing="easeOutCubic"
+              threshold={0.2}
+              rootMargin="-20px"
+              onLetterAnimationComplete={() =>
+                console.log("All letters have animated!")
+              }
+            />
+          </div>
+        </motion.div>
+
+        {/* Loading state */}
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div
+              className="flex justify-center items-center h-64"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="h-8 w-8 border-4 border-red-500 dark:border-gray-400 border-t-transparent rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              ></motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Error state */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              className={`${theme === "dark" ? "bg-black" : "bg-red-50"} border-l-4 border-red-500 rounded-lg p-4 mb-6`}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.p
+                className="text-red-600 dark:text-red-400 font-poppins"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { delay: 0.2 } }}
+              >
+                {error}
+              </motion.p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Channel data display */}
+        <AnimatePresence>
+          {channel && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Main channel info with side-by-side layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+                {/* Left side - Profile and channel name */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <SpotlightCard
+                    className={`lg:col-span-1 p-8 rounded-2xl shadow-md card-custom transition-colors channel-card ${theme === "dark" ? "bg-black" : "bg-white"}`}
+                    spotlightColor={getSpotlightColor("red")}
+                  >
+                    <div className="flex flex-col items-center">
+                      {channel.snippet.thumbnails?.medium?.url && (
+                        <motion.div
+                          className="relative mb-6"
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <Image
+                            src={channel.snippet.thumbnails.medium.url}
+                            alt="Youtube Profile"
+                            width={120}
+                            height={120}
+                            className="rounded-full border-2 border-white dark:border-gray-800 shadow-md profile-image"
+                          />
+                        </motion.div>
+                      )}
+                      <motion.div
+                        className="text-center"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                      >
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3 font-poppins">
+                          {channel.snippet.title}
+                        </h2>
+                        {channel.snippet.customUrl && (
+                          <motion.a
+                            href={`https://youtube.com/${channel.snippet.customUrl}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-red-500 dark:text-gray-300 hover:text-red-600 dark:hover:text-white text-sm font-poppins"
+                            whileHover={{ scale: 1.05, x: 3 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 400,
+                              damping: 15,
+                            }}
+                          >
+                            <svg
+                              className="w-4 h-4 mr-1 text-red-600"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                            </svg>
+                            {channel.snippet.customUrl}
+                          </motion.a>
+                        )}
+                      </motion.div>
+                    </div>
+                  </SpotlightCard>
+                </motion.div>
+
+                {/* Right side - Statistics cards */}
+                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {channel.statistics && channel.historicalData && (
+                    <>
+                      <MetricCard
+                        label="Subscribers"
+                        value={channel.statistics.subscriberCount}
+                        historicalData={channel.historicalData}
+                        icon={icons.subscribers}
+                        spotlightColor={getSpotlightColor("purple")}
+                        valueColor="text-purple-600 dark:text-gray-200"
+                        index={0}
+                      />
+
+                      <MetricCard
+                        label="Videos"
+                        value={channel.statistics.videoCount}
+                        historicalData={channel.historicalData}
+                        icon={icons.videos}
+                        spotlightColor={getSpotlightColor("teal")}
+                        valueColor="text-teal-600 dark:text-gray-200"
+                        index={1}
+                      />
+
+                      <MetricCard
+                        label="Total Views"
+                        value={channel.statistics.viewCount}
+                        historicalData={channel.historicalData}
+                        icon={icons.views}
+                        spotlightColor={getSpotlightColor("amber")}
+                        valueColor="text-amber-600 dark:text-gray-200"
+                        index={2}
+                      />
+                      
+                      <div className="col-span-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Hover over metrics to see historical data for 7, 30, and 90 days simultaneously (simulated for demonstration).
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+          {isSignedIn && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-8"
+            >
+              {/* Channel Stats */}
+              <div>
+                <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-white">
+                  Channel Analytics
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Last 10 Views</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
+                      {parseInt(
+                        channel?.statistics?.last10ViewsCount || "0"
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Last 10 Likes</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
+                      {parseInt(
+                        channel?.statistics?.likeCount || "0"
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Last 10 Comments
+                    </div>
+                    <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
+                      {parseInt(
+                        channel?.statistics?.commentCount || "0"
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Engagement Rate</div>
+                    <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
+                      {channel?.statistics?.last10ViewsCount
+                        ? `${(
+                            ((parseInt(channel.statistics.likeCount || "0") +
+                              parseInt(
+                                channel.statistics.commentCount || "0"
+                              )) /
+                              parseInt(channel.statistics.last10ViewsCount)) *
+                            100
+                          ).toFixed(2)}%`
+                        : "0%"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Videos Section */}
+              <Top10Videos />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
