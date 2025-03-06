@@ -1,184 +1,43 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useUser } from "@clerk/nextjs";
+// React and Next.js
+import { useState, useEffect } from "react";
 import Image from "next/image";
+
+// Third-party libraries
+import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
+
+// Components - Core
 import SpotlightCard from "@/components/SpotlightCards";
 import SplitText from "@/components/SplitText";
-import { useTheme } from "next-themes";
-import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/app/components/Header";
-import Top10Videos from "../components/Top10Videos";
-import MetricCard from "../components/MetricCard";
 
-interface ChannelData {
-  snippet: {
-    title: string;
-    description?: string;
-    thumbnails: {
-      medium: {
-        url: string;
-      };
-    };
-    customUrl?: string;
-  };
-  statistics?: {
-    subscriberCount: string;
-    videoCount: string;
-    viewCount: string;
-    likeCount?: string;
-    commentCount?: string;
-    shareCount?: string;
-    last10ViewsCount?: string;
-  };
-  historicalData?: {
-    "7d": {
-      subscriberCount: string;
-      viewCount: string;
-      videoCount: string;
-    };
-    "1m": {
-      subscriberCount: string;
-      viewCount: string;
-      videoCount: string;
-    };
-    "3m": {
-      subscriberCount: string;
-      viewCount: string;
-      videoCount: string;
-    };
-  };
-}
+// Components - Video Upload
+import VideoUploadModal from "@/app/components/VideoUploadModal";
+
+// Components - YouTube
+import Top10Videos from "@/app/features/youtube/components/Top10Videos";
+import MetricCard from "@/app/features/youtube/components/MetricCard";
+import { YouTubeIcons } from "@/app/features/youtube/icons";
+
+// Hooks
+import { useNextTheme } from "@/app/lib/utils/next-theme";
+import { useYouTubeChannel } from "@/app/features/youtube/hooks/useYouTubeChannel";
 
 export default function YouTubeIntegrationPage() {
+  const { getSpotlightColor, theme } = useNextTheme();
   const { isSignedIn } = useUser();
-  const [channel, setChannel] = useState<ChannelData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const { theme } = useTheme();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { channel, error, isLoading, fetchYouTubeChannel } =
+    useYouTubeChannel();
 
-  const fetchYouTubeChannel = useCallback(async () => {
-    if (!isSignedIn) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/youtube/channel");
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.error === "YouTube API access denied") {
-          setError(data.message || "Additional YouTube permissions required");
-        } else {
-          setError(data.error || "Failed to fetch YouTube channel data");
-        }
-        return;
-      }
-
-      if (data.success && data.channelData?.items?.length > 0) {
-        setChannel(data.channelData.items[0]);
-      } else {
-        setError("No YouTube channel found for this account");
-      }
-    } catch (err) {
-      console.error("Error fetching YouTube data:", err);
-      setError("An error occurred while fetching YouTube data");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isSignedIn]);
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
 
   useEffect(() => {
-    if (isSignedIn) {
-      fetchYouTubeChannel();
-    }
-  }, [isSignedIn, fetchYouTubeChannel]);
-
-  // Define spotlight colors based on theme
-  const getSpotlightColor = (color: string) => {
-    if (theme === "dark") {
-      switch (color) {
-        case "red":
-          return "rgba(248, 113, 113, 0.15)";
-        case "purple":
-          return "rgba(167, 139, 250, 0.15)";
-        case "teal":
-          return "rgba(45, 212, 191, 0.15)";
-        case "amber":
-          return "rgba(251, 191, 36, 0.15)";
-        default:
-          return "rgba(255, 255, 255, 0.05)";
-      }
-    } else {
-      switch (color) {
-        case "red":
-          return "rgba(239, 68, 68, 0.1)";
-        case "purple":
-          return "rgba(139, 92, 246, 0.1)";
-        case "teal":
-          return "rgba(20, 184, 166, 0.1)";
-        case "amber":
-          return "rgba(245, 158, 11, 0.1)";
-        default:
-          return "rgba(0, 0, 0, 0.05)";
-      }
-    }
-  };
-
-  // Icons for metric cards
-  const icons = {
-    subscribers: (
-      <svg
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        className="icon-container-subscribers"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-        />
-      </svg>
-    ),
-    videos: (
-      <svg
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        className="icon-container-videos"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-        />
-      </svg>
-    ),
-    views: (
-      <svg
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        className="icon-container-views"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-    youtube: (
-      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-      </svg>
-    ),
-  };
+    fetchYouTubeChannel();
+  }, [fetchYouTubeChannel]);
 
   // Page transition variants
   const pageVariants = {
@@ -189,14 +48,17 @@ export default function YouTubeIntegrationPage() {
 
   return (
     <motion.div
-      className={`min-h-screen ${theme === "light" ? "bg-gradient-light" : "bg-gradient-custom"} transition-colors duration-300 font-poppins`}
+      className={`min-h-screen ${
+        theme === "light" ? "bg-gradient-light" : "bg-gradient-custom"
+      } transition-colors duration-300 font-poppins`}
       variants={pageVariants}
       initial="initial"
       animate="animate"
       exit="exit"
     >
-      <Header />
+      <Header onUploadClick={handleOpenModal} />
       <div className="container mx-auto px-4 py-8">
+        <VideoUploadModal isOpen={isModalOpen} onClose={handleCloseModal} />
         {/* YouTube Dashboard title */}
         <motion.div
           className="flex justify-center items-center mb-12"
@@ -210,7 +72,7 @@ export default function YouTubeIntegrationPage() {
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              {icons.youtube}
+              {YouTubeIcons.youtube}
             </motion.div>
             <SplitText
               text={`YouTube Dashboard`}
@@ -221,9 +83,6 @@ export default function YouTubeIntegrationPage() {
               easing="easeOutCubic"
               threshold={0.2}
               rootMargin="-20px"
-              onLetterAnimationComplete={() =>
-                console.log("All letters have animated!")
-              }
             />
           </div>
         </motion.div>
@@ -250,7 +109,9 @@ export default function YouTubeIntegrationPage() {
         <AnimatePresence>
           {error && (
             <motion.div
-              className={`${theme === "dark" ? "bg-black" : "bg-red-50"} border-l-4 border-red-500 rounded-lg p-4 mb-6`}
+              className={`${
+                theme === "dark" ? "bg-black" : "bg-red-50"
+              } border-l-4 border-red-500 rounded-lg p-4 mb-6`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -285,7 +146,9 @@ export default function YouTubeIntegrationPage() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
                   <SpotlightCard
-                    className={`lg:col-span-1 p-8 rounded-2xl shadow-md card-custom transition-colors channel-card ${theme === "dark" ? "bg-black" : "bg-white"}`}
+                    className={`lg:col-span-1 p-8 rounded-2xl shadow-md card-custom transition-colors channel-card ${
+                      theme === "dark" ? "bg-black" : "bg-white"
+                    }`}
                     spotlightColor={getSpotlightColor("red")}
                   >
                     <div className="flex flex-col items-center">
@@ -351,9 +214,9 @@ export default function YouTubeIntegrationPage() {
                         label="Subscribers"
                         value={channel.statistics.subscriberCount}
                         historicalData={channel.historicalData}
-                        icon={icons.subscribers}
-                        spotlightColor={getSpotlightColor("purple")}
-                        valueColor="text-purple-600 dark:text-gray-200"
+                        icon={YouTubeIcons.subscribers}
+                        spotlightColor={getSpotlightColor("red")}
+                        valueColor="text-red-600 dark:text-gray-200"
                         index={0}
                       />
 
@@ -361,28 +224,41 @@ export default function YouTubeIntegrationPage() {
                         label="Videos"
                         value={channel.statistics.videoCount}
                         historicalData={channel.historicalData}
-                        icon={icons.videos}
-                        spotlightColor={getSpotlightColor("teal")}
-                        valueColor="text-teal-600 dark:text-gray-200"
+                        icon={YouTubeIcons.videos}
+                        spotlightColor={getSpotlightColor("blue")}
+                        valueColor="text-blue-600 dark:text-gray-200"
                         index={1}
                       />
 
                       <MetricCard
-                        label="Total Views"
+                        label="Views"
                         value={channel.statistics.viewCount}
                         historicalData={channel.historicalData}
-                        icon={icons.views}
+                        icon={YouTubeIcons.views}
                         spotlightColor={getSpotlightColor("amber")}
                         valueColor="text-amber-600 dark:text-gray-200"
                         index={2}
                       />
-                      
+
                       <div className="col-span-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
                         <p className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3 w-3 mr-1 inline"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
-                          Hover over metrics to see historical data for 7, 30, and 90 days simultaneously (simulated for demonstration).
+                          Hover over metrics to see historical data for 7, 30,
+                          and 90 days simultaneously (simulated for
+                          demonstration).
                         </p>
                       </div>
                     </>
@@ -404,23 +280,39 @@ export default function YouTubeIntegrationPage() {
                   Channel Analytics
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Last 10 Views</div>
+                  <div
+                    className={`${
+                      theme === "dark" ? "bg-black" : "bg-white"
+                    } rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}
+                  >
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Last 10 Views
+                    </div>
                     <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
                       {parseInt(
                         channel?.statistics?.last10ViewsCount || "0"
                       ).toLocaleString()}
                     </div>
                   </div>
-                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Last 10 Likes</div>
+                  <div
+                    className={`${
+                      theme === "dark" ? "bg-black" : "bg-white"
+                    } rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}
+                  >
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Last 10 Likes
+                    </div>
                     <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
                       {parseInt(
                         channel?.statistics?.likeCount || "0"
                       ).toLocaleString()}
                     </div>
                   </div>
-                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
+                  <div
+                    className={`${
+                      theme === "dark" ? "bg-black" : "bg-white"
+                    } rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}
+                  >
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       Last 10 Comments
                     </div>
@@ -430,8 +322,14 @@ export default function YouTubeIntegrationPage() {
                       ).toLocaleString()}
                     </div>
                   </div>
-                  <div className={`${theme === "dark" ? "bg-black" : "bg-white"} rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Engagement Rate</div>
+                  <div
+                    className={`${
+                      theme === "dark" ? "bg-black" : "bg-white"
+                    } rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-800`}
+                  >
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Engagement Rate
+                    </div>
                     <div className="text-lg font-semibold mt-1 text-gray-800 dark:text-gray-200">
                       {channel?.statistics?.last10ViewsCount
                         ? `${(
