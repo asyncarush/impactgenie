@@ -1,64 +1,13 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-
-interface VideoData {
-  id: string;
-  channelTitle: string;
-  title: string;
-  description: string;
-  thumbnail: {
-    default: { url: string };
-    medium: { url: string };
-    high: { url: string };
-  };
-  likes: string;
-  comments: string;
-  views: string;
-  dislikes: string;
-}
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  videos: VideoData[];
-}
+import { useTop10Videos } from "../hooks/useTop10Videos";
 
 export default function Top10Videos() {
   const { theme } = useTheme();
-  const [videos, setVideos] = useState<VideoData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchTop10Videos = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/youtube/playlistItems", {
-          headers: {
-            'Cache-Control': 'max-age=300', // 5 minutes
-          }
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data: ApiResponse = await response.json();
-        if (!data.success) {
-          throw new Error(data.message);
-        }
-        setVideos(data.videos);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch videos");
-        console.error("Error fetching videos:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTop10Videos();
-  }, []);
+  const { videos, loading, error } = useTop10Videos();
 
   if (loading) {
     return (

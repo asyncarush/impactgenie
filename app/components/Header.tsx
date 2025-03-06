@@ -2,15 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from 'next/navigation';
 import { motion } from "framer-motion";
 import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 import UserProfileButton from "./UserProfileButton";
+import VideoUploadButton from "./VideoUploadButton";
 import { useTheme } from "next-themes";
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onUploadClick?: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onUploadClick }) => {
   const { isSignedIn } = useUser();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -85,18 +92,32 @@ const Header: React.FC = () => {
             </>
           ) : (
             <div className="flex items-center gap-4">
-              <Link href="/youtube">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-full font-medium shadow-lg hover:shadow-red-500/25 transition-shadow duration-300"
-                >
-                  YouTube
-                </motion.button>
-              </Link>
+                {pathname !== '/youtube' && (
+                  <Link href="/youtube">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-full font-medium shadow-lg hover:shadow-red-500/25 transition-shadow duration-300"
+                    >
+                      YouTube
+                    </motion.button>
+                  </Link>
+                )}
 
-              <UserProfileButton />
-            </div>
+                {pathname === '/youtube' && onUploadClick && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <VideoUploadButton 
+                      onClick={onUploadClick}
+                    />
+                  </motion.div>
+                )}
+
+                <UserProfileButton />
+              </div>
           )}
         </nav>
       </div>

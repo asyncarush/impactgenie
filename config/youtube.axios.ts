@@ -19,24 +19,44 @@ const API_YOUTUBE = axios.create({
 });
 
 async function getOAuth2Token() {
-  const { userId } = await auth();
-  // Get the client and fetch the OAuth token
-  const client = await clerkClient();
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error('User authentication required');
+    }
 
-  const response = await client.users.getUserOauthAccessToken(
-    userId as string,
-    "google"
-  );
+    // Get the client and fetch the OAuth token
+    const client = await clerkClient();
+    if (!client) {
+      throw new Error('Failed to initialize authentication client');
+    }
 
-  if (!userId) throw new Error("User not authenticated");
+    const response = await client.users.getUserOauthAccessToken(
+      userId,
+      'google'
+    ).catch(error => {
+      console.error('OAuth token fetch error:', error);
+      throw new Error('Failed to get YouTube access token. Please reconnect your Google account.');
+    });
 
-  if (!response.data || response.data.length === 0) {
-    throw new Error("No OAuth access token found for the user");
+    if (!response?.data || response.data.length === 0) {
+      throw new Error('No YouTube access found. Please connect your Google account with YouTube permissions.');
+    }
+
+    const accessToken = response.data[0].token;
+    if (!accessToken) {
+      throw new Error('Invalid YouTube access token. Please reconnect your Google account.');
+    }
+
+    return { userId, client, response, accessToken };
+  } catch (error) {
+    console.error('Authentication error:', error);
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : 'Failed to authenticate with YouTube. Please try signing in again.'
+    );
   }
-
-  const accessToken = response.data[0].token;
-
-  return { userId, client, response, accessToken };
 }
 
 // interceptor for in injecting the access token
@@ -307,4 +327,178 @@ async function getHistoricalData(channelId: string, period: '7d' | '1m' | '3m') 
   }
 }
 
-export { getChannelData, getTrendingVideos, getVideoStats, getCachedHistoricalData };
+interface UploadProgressCallback {
+  (progress: number): void;
+}
+
+async function uploadVideo(videoData: {
+  title: string;
+  description: string;
+  privacy: string;
+  tags?: string[];
+  category?: string;
+  videoFile: File;
+  thumbnail?: File;
+}, onProgress?: UploadProgressCallback) {
+  try {
+    // Verify authentication first
+    const { accessToken, userId } = await getOAuth2Token();
+    if (!accessToken) {
+      throw new Error('No access token available. Please authenticate with YouTube.');
+    }
+
+    // Constants for upload configuration
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks as recommended by YouTube
+    const MAX_RETRIES = 5;
+    const INITIAL_RETRY_DELAY = 1000; // Start with 1 second delay
+
+    // First, initiate the video upload with metadata
+    const videoMetadata = {
+      snippet: {
+        title: videoData.title,
+        description: videoData.description,
+        tags: videoData.tags,
+        categoryId: videoData.category || '24', // Default to 'Entertainment' if not specified
+      },
+      status: {
+        privacyStatus: videoData.privacy,
+        selfDeclaredMadeForKids: false,
+      },
+    };
+
+    // Initialize the resumable upload session
+    const initResponse = await API_YOUTUBE.post(
+      'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status,contentDetails',
+      videoMetadata,
+      {
+        headers: {
+          'X-Upload-Content-Type': videoData.videoFile.type,
+          'X-Upload-Content-Length': videoData.videoFile.size.toString(),
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      }
+    );
+
+    const uploadUrl = initResponse.headers['location'];
+    if (!uploadUrl) {
+      throw new Error('Failed to get upload URL from YouTube');
+    }
+
+    // Upload the video in chunks with improved error handling
+    const fileSize = videoData.videoFile.size;
+    let uploaded = 0;
+    let lastSuccessfulByte = 0;
+
+    while (uploaded < fileSize) {
+      let retryCount = 0;
+      let chunkUploaded = false;
+
+      while (!chunkUploaded && retryCount < MAX_RETRIES) {
+        try {
+          // Before uploading a chunk, verify the last successful byte
+          if (retryCount > 0) {
+            const statusResponse = await API_YOUTUBE.put(uploadUrl, null, {
+              headers: { 'Content-Range': `bytes */${fileSize}` },
+            });
+
+            // If we get a 308 Resume Incomplete status, extract the last successful byte
+            if (statusResponse.status === 308 && statusResponse.headers['range']) {
+              const range = statusResponse.headers['range'];
+              lastSuccessfulByte = parseInt(range.split('-')[1]) + 1;
+              uploaded = lastSuccessfulByte;
+            }
+          }
+
+          const chunk = await videoData.videoFile.slice(uploaded, Math.min(uploaded + CHUNK_SIZE, fileSize)).arrayBuffer();
+          const end = Math.min(uploaded + chunk.byteLength, fileSize);
+
+          const response = await API_YOUTUBE.put(uploadUrl, chunk, {
+            headers: {
+              'Content-Type': 'application/octet-stream',
+              'Content-Range': `bytes ${uploaded}-${end - 1}/${fileSize}`,
+            },
+            // Increase timeout for larger chunks
+            timeout: 60000, // 60 second timeout
+          });
+
+          // Check if this is the final chunk and we got the video ID
+          if (response.status === 200 || response.status === 201) {
+            return {
+              success: true,
+              videoId: response.data.id,
+              message: 'Video uploaded successfully',
+              url: `https://youtube.com/watch?v=${response.data.id}`,
+            };
+          }
+
+          uploaded = end;
+          chunkUploaded = true;
+
+          // Update progress
+          const progress = Math.round((uploaded / fileSize) * 100);
+          if (onProgress) {
+            onProgress(progress);
+          }
+
+        } catch (error) {
+          const err = error as AxiosError;
+          console.error(`Chunk upload error (attempt ${retryCount + 1}):`, err.message);
+
+          // Handle specific error cases
+          if (err.response?.status === 401) {
+            throw new Error('YouTube authentication expired. Please sign in again.');
+          } else if (err.response?.status === 403) {
+            throw new Error('Access to YouTube API denied. Please check your permissions.');
+          } else if (err.response?.status === 503) {
+            throw new Error('YouTube service is currently unavailable. Please try again later.');
+          }
+
+          retryCount++;
+          if (retryCount >= MAX_RETRIES) {
+            throw new Error(`Failed to upload video chunk after ${MAX_RETRIES} attempts`);
+          }
+
+          // Exponential backoff with jitter
+          const delay = Math.min(INITIAL_RETRY_DELAY * Math.pow(2, retryCount) + Math.random() * 1000, 64000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw new Error('Upload completed but failed to get video ID');
+
+  } catch (error) {
+    const err = error as AxiosError<YouTubeApiErrorResponse>;
+    console.error('YouTube API Error:', err.response?.data || err.message);
+    
+    // Enhanced error handling
+    if (err.response?.status === 401) {
+      throw new Error('YouTube authentication expired. Please sign in again.');
+    } else if (err.response?.status === 403) {
+      throw new Error('Access to YouTube API denied. Please check your permissions.');
+    } else if (err.message.includes('timeout')) {
+      throw new Error('Upload timed out. Please check your internet connection and try again.');
+    } else if (err.message.includes('quota')) {
+      throw new Error('YouTube API quota exceeded. Please try again later.');
+    } else if (err.message.includes('network')) {
+      throw new Error('Network error occurred. Please check your internet connection.');
+    }
+    
+    throw new Error(
+      err.response?.data?.error?.message || 'Failed to upload video'
+    );
+  } finally {
+    // Clean up progress tracking
+    if (typeof onProgress === 'function') {
+      onProgress(0);
+    }
+  }
+}
+
+export { 
+  getChannelData, 
+  getTrendingVideos, 
+  getVideoStats, 
+  getCachedHistoricalData,
+  uploadVideo 
+};
