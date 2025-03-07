@@ -13,6 +13,9 @@ interface VideoUploadModalProps {
   onClose: () => void;
 }
 
+
+
+
 const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onClose }) => {
   const { userId } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
@@ -405,7 +408,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onClose }) 
                   <p className="mt-1 text-xs text-gray-500">Add relevant tags to help viewers discover your video</p>
                 </div>
 
-                {/* Category */}
+                {/* Category
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <div className="relative">
@@ -428,7 +431,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onClose }) 
                       </svg>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Error Message */}
                 {error && (
@@ -480,7 +483,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onClose }) 
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                           </svg>
-                          <span>Upload to YouTube</span>
+                          <span>Upload</span>
                         </>
                       )}
                     </span>
