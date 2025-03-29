@@ -5,7 +5,7 @@ import { getChannelData } from "@/config/youtube.axios";
 export async function GET(_request: NextRequest) {
   try {
     const channelData = await getChannelData();
-    console.log("Channel data fetched successfully:", channelData);
+    // console.log("Channel data fetched successfully:", channelData);
 
     // Create response with cache headers
     const response = NextResponse.json({
@@ -13,13 +13,13 @@ export async function GET(_request: NextRequest) {
       message: "YouTube channel data retrieved successfully",
       channelData,
     });
-    
+
     // Add cache control headers
-    response.headers.set('Cache-Control', 'public, max-age=300'); // 5 minutes
-    
+    response.headers.set("Cache-Control", "public, max-age=300"); // 5 minutes
+
     return response;
   } catch (error) {
-    console.error("Error in YouTube channel route:", error);
+    // console.error("Error in YouTube channel route:", error);
 
     // Check if the error is related to OAuth scopes
     const errorMessage =

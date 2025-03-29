@@ -68,6 +68,7 @@ export async function POST(req: Request) {
 
     // Validate required fields
     const missingFields = [];
+
     if (!videoFile) missingFields.push("video file");
     if (!title) missingFields.push("title");
     if (!userId) missingFields.push("user ID");
