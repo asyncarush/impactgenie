@@ -94,5 +94,5 @@ jobs:
 
       - name: Verify Deployment
         run: |
-          kubectl rollout status deployment/$HELM_BACKEND_RELEASE_NAME -n $HELM_NAMESPACE
+          # kubectl rollout status deployment/$HELM_BACKEND_RELEASE_NAME -n $HELM_NAMESPACE
           kubectl rollout status deployment/$HELM_FRONTEND_RELEASE_NAME -n $HELM_NAMESPACE
