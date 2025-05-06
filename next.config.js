@@ -9,9 +9,9 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverActions: true,
+    serverActions: {}
   },
   output: "standalone",
-};
+};  
 
 module.exports = nextConfig;

@@ -1,44 +1,63 @@
-# Use Node.js v20 as the base image
+# ------------------------------
+# Stage 1: Base image
+# ------------------------------
 FROM node:20-alpine AS base
 
 # Set working directory
 WORKDIR /app
 
-# Install dependencies only when needed
+# ------------------------------
+# Stage 2: Dependencies
+# ------------------------------
 FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed
+
+# Add necessary packages
 RUN apk add --no-cache libc6-compat
+
+# Install dependencies
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Rebuild the source code only when needed
+# ------------------------------
+# Stage 3: Build
+# ------------------------------
 FROM base AS builder
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build
-# ENV NEXT_TELEMETRY_DISABLED 1
+# Optional: Disable Next.js telemetry during build
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
-# Production image, copy all the files and run next
+# ------------------------------
+# Stage 4: Production image
+# ------------------------------
 FROM base AS runner
+
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV HOSTNAME "0.0.0.0"
-ENV PORT 3000
+# Create user for running the app
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Set environment variables
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 
-COPY --from=builder --chown=nextjs:nodejs /app ./
+# Copy standalone app files
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# Use non-root user
 USER nextjs
 
 EXPOSE 3000
-CMD ["npx", "next", "start"]
+
+CMD ["node", "server.js"]
+    
