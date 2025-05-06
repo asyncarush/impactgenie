@@ -52,6 +52,11 @@ spec:
           readinessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          env:
+            - name: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+              value: "pk_test_cmVhZHktc2hhZC0xOC5jbGVyay5hY2NvdW50cy5kZXYk"
+            - name: CLERK_SECRET_KEY
+              value: "sk_test_vT7V3sDCZF2x491of8JLHN0vvEOttWDtWb0sJL9SLO" 
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
