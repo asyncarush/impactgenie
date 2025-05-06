@@ -74,14 +74,14 @@ jobs:
           kubectl config use-context ${{ secrets.KUBE_CONTEXT }}
           kubectl cluster-info
 
-      - name: Deploy Backend with Helm
-        run: |
-          helm upgrade --install $HELM_BACKEND_RELEASE_NAME $HELM_BACKEND_CHART_PATH \
-            --namespace $HELM_NAMESPACE \
-            --create-namespace \
-            --set image.repository=gcr.io/$GCR_PROJECT_ID/$BACKEND_IMAGE_NAME \
-            --set image.tag=$GITHUB_SHA \
-            --set image.pullPolicy=Always
+      # - name: Deploy Backend with Helm
+      #   run: |
+      #     helm upgrade --install $HELM_BACKEND_RELEASE_NAME $HELM_BACKEND_CHART_PATH \
+      #       --namespace $HELM_NAMESPACE \
+      #       --create-namespace \
+      #       --set image.repository=gcr.io/$GCR_PROJECT_ID/$BACKEND_IMAGE_NAME \
+      #       --set image.tag=$GITHUB_SHA \
+      #       --set image.pullPolicy=Always
 
       - name: Deploy Frontend with Helm
         run: |
